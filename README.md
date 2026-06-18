@@ -193,7 +193,7 @@ cp .env.example .env
 ### Running the App
 
 ```bash
-streamlit run app.py
+streamlit run streamlit_app.py
 ```
 
 Open [http://localhost:8501](http://localhost:8501) in your browser.
@@ -219,7 +219,7 @@ GITHUB_TOKEN=ghp_your_token_here
 ```
 github-project-auditor/
 │
-├── app.py                          # Streamlit UI — enterprise light theme
+├── streamlit_app.py                 # Streamlit UI — enterprise light theme
 ├── requirements.txt                # Pinned dependencies
 ├── .env.example                    # Token template
 ├── LICENSE                         # MIT License

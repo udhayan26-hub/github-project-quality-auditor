@@ -1,5 +1,5 @@
 """
-app.py — Streamlit UI for the GitHub Project Quality Auditor.
+streamlit_app.py — Streamlit UI for the GitHub Project Quality Auditor.
 Enterprise-grade light theme: clean, professional, SaaS-quality.
 Inspired by Notion, Linear, Stripe Dashboard, Vercel, GitHub Enterprise.
 """
