@@ -207,7 +207,7 @@ With a token: **5,000 API requests/hour**
 1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
 2. Generate a new token (classic)
 3. Select scope: `public_repo` (read-only)
-4. Copy token into the sidebar, or add to `.env`:
+4. Add the token to `.env`:
 
 ```env
 GITHUB_TOKEN=ghp_your_token_here

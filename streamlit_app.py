@@ -898,7 +898,7 @@ def _label_for_score(score: int, max_score: int = 100) -> tuple[str, str, str]:
 
 # ─── Component renderers ─────────────────────────────────────────────────────
 
-def _render_sidebar() -> tuple[str | None, str]:
+def _render_sidebar() -> str:
     with st.sidebar:
         st.markdown("""
         <div class="sidebar-logo">
@@ -912,32 +912,6 @@ def _render_sidebar() -> tuple[str | None, str]:
 
         st.markdown('<div class="sidebar-section-title">Navigation</div>', unsafe_allow_html=True)
         view = st.radio("Go to", ["Auditor Dashboard", "Admin Analytics"], label_visibility="collapsed")
-
-        st.markdown("---")
-        st.markdown('<div class="sidebar-section-title">Authentication</div>', unsafe_allow_html=True)
-        token = st.text_input(
-            "GitHub Token",
-            type="password",
-            placeholder="ghp_xxxxxxxxxxxx",
-            help="Personal Access Token for 5,000 req/hr. Generate at github.com/settings/tokens",
-        )
-
-        if token:
-            st.markdown("""
-            <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;
-                        padding:8px 12px;font-size:0.75rem;color:#065F46;font-weight:600;
-                        display:flex;gap:6px;align-items:center;margin-top:6px;">
-                ✓ Token configured — 5,000 req/hr
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:6px;
-                        padding:8px 12px;font-size:0.75rem;color:#92400E;
-                        display:flex;gap:6px;align-items:center;margin-top:6px;">
-                ⚠ Unauthenticated — 60 req/hr limit
-            </div>
-            """, unsafe_allow_html=True)
 
         st.markdown("---")
         st.markdown('<div class="sidebar-section-title">Scoring Weights</div>', unsafe_allow_html=True)
@@ -979,7 +953,7 @@ def _render_sidebar() -> tuple[str | None, str]:
         </div>
         """, unsafe_allow_html=True)
 
-    return (token.strip() if token else None), view
+    return view
 
 
 def _render_score_card_html(icon: str, name: str, score: int, max_score: int) -> str:
@@ -1417,7 +1391,7 @@ def main() -> None:
 
     st.markdown(LIGHT_CSS, unsafe_allow_html=True)
 
-    token, view = _render_sidebar()
+    view = _render_sidebar()
 
     if view == "Admin Analytics":
         from analytics.dashboard import check_password, render_dashboard
@@ -1486,7 +1460,7 @@ def main() -> None:
         try:
             start_time = time.time()
             _update(10, "🔗 Connecting to GitHub API…")
-            svc = GitHubService(token=token)
+            svc = GitHubService()
             time.sleep(0.15)
 
             _update(25, f"📦 Fetching <strong>{owner}/{repo_name}</strong>…")
