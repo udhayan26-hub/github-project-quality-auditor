@@ -100,3 +100,8 @@ dmypy.json
 
 # Ruff / linting
 .ruff_cache/
+
+# Databases
+*.db
+analytics.db
+

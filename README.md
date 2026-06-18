@@ -34,6 +34,7 @@
 - [Running Tests](#-running-tests)
 - [Tech Stack](#-tech-stack)
 - [Roadmap](#-roadmap)
+- [Admin Analytics Dashboard](#-admin-analytics-dashboard)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -361,6 +362,36 @@ git push origin feat/your-feature-name
 - All analyzers must inherit from `BaseAnalyzer`
 - New scoring constants go in `utils/constants.py`
 - All new logic must have corresponding tests in `tests/`
+
+## 📊 Admin Analytics Dashboard
+
+The application features a production-grade, password-protected analytics panel to monitor user engagement and audit logs. It is accessible by toggling the view selector in the sidebar.
+
+### Key Features
+- **Usage Metrics**: Page visits, unique visitors, returning user rates, successful analyses, average duration, and success rates.
+- **Engagement Charts**: Interactive graphs displaying daily visitor traffic and audit runs.
+- **Demographics & Platforms**: Inferred geographic localization (via header language tags), device type/OS breakdown, and primary programming languages audited.
+- **Feature Tracking**: Counts user interactions such as downloading reports.
+- **Exports**: Ability to download the audit logs and visitor records as CSV or JSON, and auto-generate weekly/monthly markdown report summaries.
+
+### Privacy Compliance
+- **No PII or IPs stored**: Raw IP addresses and full User-Agent headers are **never** written to disk. Fingerprinting is handled via salted SHA-256 hashes.
+- **Auto-Migrating Schema**: SQLAlchemy automatically creates tables for SQLite (local) or PostgreSQL (production) at launch.
+
+### Environment Setup
+
+Add the following to your `.env` file or hosting secrets:
+
+```env
+# Verification password for the dashboard
+ADMIN_PASSWORD=your_secure_password_here
+
+# Database URL (SQLite locally, PostgreSQL in production)
+DATABASE_URL=sqlite:///analytics.db
+
+# Private salt for hashing fingerprints
+ANALYTICS_SALT=generate_a_random_salt_here
+```
 
 ---
 

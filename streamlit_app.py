@@ -22,6 +22,17 @@ from services.github_service import (
     parse_github_url,
 )
 
+from analytics.database import init_db
+from analytics.tracking import (
+    track_visit,
+    track_analysis,
+    track_error,
+    track_feature_usage,
+)
+
+# Initialize analytics database
+init_db()
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -887,7 +898,7 @@ def _label_for_score(score: int, max_score: int = 100) -> tuple[str, str, str]:
 
 # ─── Component renderers ─────────────────────────────────────────────────────
 
-def _render_sidebar() -> str | None:
+def _render_sidebar() -> tuple[str | None, str]:
     with st.sidebar:
         st.markdown("""
         <div class="sidebar-logo">
@@ -899,6 +910,10 @@ def _render_sidebar() -> str | None:
         </div>
         """, unsafe_allow_html=True)
 
+        st.markdown('<div class="sidebar-section-title">Navigation</div>', unsafe_allow_html=True)
+        view = st.radio("Go to", ["Auditor Dashboard", "Admin Analytics"], label_visibility="collapsed")
+
+        st.markdown("---")
         st.markdown('<div class="sidebar-section-title">Authentication</div>', unsafe_allow_html=True)
         token = st.text_input(
             "GitHub Token",
@@ -964,7 +979,7 @@ def _render_sidebar() -> str | None:
         </div>
         """, unsafe_allow_html=True)
 
-    return token.strip() if token else None
+    return (token.strip() if token else None), view
 
 
 def _render_score_card_html(icon: str, name: str, score: int, max_score: int) -> str:
@@ -1206,6 +1221,7 @@ def _render_executive_summary(report: AuditReport) -> None:
 
 
 def _render_full_report(report: AuditReport) -> None:
+    track_feature_usage("View Audit Report")
     # ── Repo header ────────────────────────────────────────────────────────
     _render_repo_header(report)
 
@@ -1368,6 +1384,7 @@ def _render_full_report(report: AuditReport) -> None:
             file_name=f"{report.metadata.name}_audit_report.md",
             mime="text/markdown",
             use_container_width=True,
+            on_click=lambda: track_feature_usage("Download Markdown Report")
         )
     with col2:
         st.download_button(
@@ -1376,6 +1393,7 @@ def _render_full_report(report: AuditReport) -> None:
             file_name=f"{report.metadata.name}_audit_report.json",
             mime="application/json",
             use_container_width=True,
+            on_click=lambda: track_feature_usage("Download JSON Report")
         )
 
     # ── Footer ─────────────────────────────────────────────────────────────
@@ -1394,9 +1412,18 @@ def _render_full_report(report: AuditReport) -> None:
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    # Track page visit
+    track_visit()
+
     st.markdown(LIGHT_CSS, unsafe_allow_html=True)
 
-    token = _render_sidebar()
+    token, view = _render_sidebar()
+
+    if view == "Admin Analytics":
+        from analytics.dashboard import check_password, render_dashboard
+        if check_password():
+            render_dashboard()
+        return
 
     # ── Page header ────────────────────────────────────────────────────────
     st.markdown("""
@@ -1457,6 +1484,7 @@ def main() -> None:
             )
 
         try:
+            start_time = time.time()
             _update(10, "🔗 Connecting to GitHub API…")
             svc = GitHubService(token=token)
             time.sleep(0.15)
@@ -1476,11 +1504,23 @@ def main() -> None:
             progress.empty()
             status.empty()
 
+            # Track successful analysis
+            duration = time.time() - start_time
+            track_analysis(
+                repo_url=repo_url.strip(),
+                repo_name=f"{owner}/{repo_name}",
+                total_score=report.total_score,
+                resume_impact_score=report.resume_impact_score,
+                duration=duration,
+                language=repo_data.language
+            )
+
             _render_full_report(report)
 
         except InvalidRepoURLError as e:
             progress.empty(); status.empty()
             st.error(f"Invalid URL — {e}")
+            track_error(repo_url.strip(), f"{owner}/{repo_name}", e)
 
         except RepoNotFoundError as e:
             progress.empty(); status.empty()
@@ -1489,6 +1529,7 @@ def main() -> None:
                 "Ensure the repository is **public** and the URL is correct. "
                 "Private repositories are not supported without an appropriate token."
             )
+            track_error(repo_url.strip(), f"{owner}/{repo_name}", e)
 
         except RateLimitError as e:
             progress.empty(); status.empty()
@@ -1497,15 +1538,18 @@ def main() -> None:
                 "Add a GitHub Personal Access Token in the sidebar "
                 "to increase the limit from 60 to 5,000 requests per hour."
             )
+            track_error(repo_url.strip(), f"{owner}/{repo_name}", e)
 
         except GitHubServiceError as e:
             progress.empty(); status.empty()
             st.error(f"GitHub API error — {e}")
+            track_error(repo_url.strip(), f"{owner}/{repo_name}", e)
 
         except Exception as e:
             progress.empty(); status.empty()
             logger.exception("Unexpected error")
             st.error(f"Unexpected error — {e}")
+            track_error(repo_url.strip(), f"{owner}/{repo_name}", e)
 
     else:
         # ── Landing / empty state ──────────────────────────────────────────
