@@ -1512,7 +1512,7 @@ def main() -> None:
                 total_score=report.total_score,
                 resume_impact_score=report.resume_impact_score,
                 duration=duration,
-                language=repo_data.language
+                language=repo_data.metadata.language
             )
 
             _render_full_report(report)
