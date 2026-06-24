@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: github-project-auditor
+    ports:
+      - "8501:8501"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - DATABASE_URL=sqlite:///data/analytics.db
+      - ANALYTICS_SALT=${ANALYTICS_SALT}
+    volumes:
+      # Persist SQLite analytics database on host machine
+      - ./data:/app/data
+    restart: unless-stopped

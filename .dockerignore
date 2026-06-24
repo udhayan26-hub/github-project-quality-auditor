@@ -1,0 +1,30 @@
+# Git & GitHub
+.git/
+.github/
+
+# Python caches & bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# Databases & local data
+*.db
+data/
+analytics.db
+
+# Documentation & tests
+docs/
+tests/
+walkthrough.md
+implementation_plan.md
+task.md
+CHANGELOG.md
